@@ -5,17 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#fffdf8">
   <title>상해 아이스크림 시장조사 리스트</title>
-  <meta name="description" content="상하이 소프트아이스크림 시장조사를 위한 5개 매장 지도와 대표 메뉴">
+  <meta name="description" content="상하이 아이스크림·디저트 시장조사를 위한 6개 매장 지도와 대표 메뉴">
   <link rel="canonical" href="https://wooramii.github.io/shanghi-icecream-map/">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="ko_KR">
   <meta property="og:site_name" content="상해 아이스크림 시장조사 리스트">
   <meta property="og:title" content="상해 아이스크림 시장조사 리스트">
-  <meta property="og:description" content="상하이 소프트아이스크림 시장조사를 위한 5개 매장 지도와 대표 메뉴">
+  <meta property="og:description" content="상하이 아이스크림·디저트 시장조사를 위한 6개 매장 지도와 대표 메뉴">
   <meta property="og:url" content="https://wooramii.github.io/shanghi-icecream-map/">
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="상해 아이스크림 시장조사 리스트">
-  <meta name="twitter:description" content="상하이 소프트아이스크림 시장조사를 위한 5개 매장 지도와 대표 메뉴">
+  <meta name="twitter:description" content="상하이 아이스크림·디저트 시장조사를 위한 6개 매장 지도와 대표 메뉴">
   <style>
     :root {
       --ink: #201f1b;
@@ -120,7 +120,9 @@
     }
 
     .active .number { background: var(--accent); color: #fff; }
-    .store-copy { min-width: 0; }
+    .store-copy { min-width: 0; cursor: text; user-select: text; -webkit-user-select: text; }
+    .store-copy * { user-select: text; -webkit-user-select: text; }
+    .store-copy ::selection { background: #ffe1aa; color: var(--ink); }
     .name-en { display: block; font-size: 15px; font-weight: 850; line-height: 1.25; }
     .name-cn { display: block; margin-top: 3px; color: var(--muted); font-size: 12px; line-height: 1.35; }
     .menu { display: block; margin-top: 9px; color: var(--matcha); font-size: 12px; font-weight: 750; line-height: 1.35; }
@@ -261,6 +263,18 @@
           <span class="store-copy"><span class="name-en">90 Ye Matcha</span><span class="name-cn">九十葉·抹茶专门店（上海商城店）· B1</span><span class="menu">말차 소프트아이스크림</span></span>
           <span class="arrow" aria-hidden="true">›</span>
         </button>
+
+        <button class="store" type="button"
+          data-name="OUR Bakery · OUR Bakery（中海环宇荟店）"
+          data-menu="크루아상 · 팥버터빵"
+          data-query="Our Bakery Shanghai"
+          data-center="31.21166,121.47602"
+          data-zoom="17"
+          data-link="https://maps.app.goo.gl/kDesYAtUb15tp4QJ9">
+          <span class="number">06</span>
+          <span class="store-copy"><span class="name-en">OUR Bakery</span><span class="name-cn">OUR Bakery（中海环宇荟店）</span><span class="menu">크루아상 · 팥버터빵</span></span>
+          <span class="arrow" aria-hidden="true">›</span>
+        </button>
       </div>
     </aside>
 
@@ -294,7 +308,10 @@
       map.src = `https://maps.google.com/maps?q=${query}&ll=${center}&z=${store.dataset.zoom}&output=embed`;
     }
 
-    stores.forEach((store) => store.addEventListener('click', () => showStore(store)));
+    stores.forEach((store) => store.addEventListener('click', () => {
+      if (window.getSelection()?.toString()) return;
+      showStore(store);
+    }));
     showStore(stores[0]);
   </script>
 </body>
