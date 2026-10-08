@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#fffdf8">
+  <title>Shanghai Soft Serve Map</title>
+  <style>
+    :root {
+      --ink: #201f1b;
+      --muted: #69675f;
+      --paper: #fffdf8;
+      --panel: #ffffff;
+      --line: #dedbd1;
+      --accent: #d92820;
+      --accent-soft: #fff0ed;
+      --matcha: #4f6f42;
+      --shadow: 0 14px 35px rgba(53, 47, 36, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: Inter, "Noto Sans KR", "Noto Sans SC", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+
+    button, a { font: inherit; }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: minmax(300px, 390px) minmax(0, 1fr);
+    }
+
+    .sidebar {
+      position: relative;
+      z-index: 2;
+      min-width: 0;
+      padding: 28px 20px 24px;
+      background: var(--paper);
+      border-right: 1px solid var(--line);
+      overflow-y: auto;
+    }
+
+    .eyebrow {
+      margin: 0 0 7px;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(27px, 3vw, 38px);
+      line-height: 1.06;
+      letter-spacing: 0;
+    }
+
+    .intro {
+      margin: 10px 0 22px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .stores {
+      display: grid;
+      gap: 9px;
+    }
+
+    .store {
+      width: 100%;
+      min-height: 108px;
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr) 26px;
+      gap: 11px;
+      align-items: start;
+      padding: 15px 13px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--panel);
+      color: inherit;
+      text-align: left;
+      cursor: pointer;
+      transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+    }
+
+    .store:hover { border-color: #aaa69b; transform: translateY(-1px); }
+    .store:focus-visible { outline: 3px solid rgba(217, 40, 32, 0.24); outline-offset: 2px; }
+    .store.active { border-color: var(--accent); box-shadow: 0 6px 18px rgba(217, 40, 32, 0.11); }
+
+    .number {
+      width: 29px;
+      height: 29px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #f0eee7;
+      color: #4b4943;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .active .number { background: var(--accent); color: #fff; }
+    .store-copy { min-width: 0; }
+    .name-en { display: block; font-size: 15px; font-weight: 850; line-height: 1.25; }
+    .name-cn { display: block; margin-top: 3px; color: var(--muted); font-size: 12px; line-height: 1.35; }
+    .menu { display: block; margin-top: 9px; color: var(--matcha); font-size: 12px; font-weight: 750; line-height: 1.35; }
+    .arrow { padding-top: 4px; color: #969288; font-size: 19px; text-align: center; }
+    .active .arrow { color: var(--accent); }
+
+    .map-panel {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      min-height: 560px;
+      background: #e8e5dc;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+    }
+
+    .map-card {
+      position: absolute;
+      left: 22px;
+      right: 22px;
+      bottom: max(22px, env(safe-area-inset-bottom));
+      max-width: 640px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 15px 16px 15px 18px;
+      border: 1px solid rgba(255, 255, 255, 0.72);
+      border-radius: 7px;
+      background: rgba(255, 253, 248, 0.94);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+    }
+
+    .map-meta { min-width: 0; }
+    .map-label { margin: 0 0 3px; color: var(--accent); font-size: 11px; font-weight: 850; text-transform: uppercase; }
+    #selected-name { margin: 0; font-size: 16px; font-weight: 850; line-height: 1.3; }
+    #selected-menu { margin: 4px 0 0; color: var(--muted); font-size: 12px; line-height: 1.35; }
+
+    .maps-link {
+      flex: 0 0 auto;
+      min-height: 42px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 15px;
+      border-radius: 5px;
+      background: var(--ink);
+      color: #fff;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .maps-link:hover { background: var(--accent); }
+
+    @media (max-width: 780px) {
+      .app { display: flex; flex-direction: column; min-height: 100dvh; }
+      .sidebar { order: 2; padding: 20px 14px calc(28px + env(safe-area-inset-bottom)); border: 0; }
+      .map-panel { order: 1; position: relative; height: 58dvh; min-height: 390px; }
+      .map-card { left: 12px; right: 12px; bottom: 12px; gap: 10px; padding: 12px; }
+      .maps-link { min-height: 40px; padding: 0 12px; font-size: 12px; }
+      h1 { font-size: 30px; }
+      .intro { margin-bottom: 16px; }
+      .store { min-height: 102px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <aside class="sidebar">
+      <p class="eyebrow">Shanghai field trip</p>
+      <h1>Soft Serve Map</h1>
+      <p class="intro">매장을 선택하면 공유 링크의 검색어와 위치를 같은 화면 지도에 표시합니다.</p>
+
+      <div class="stores" id="stores">
+        <button class="store active" type="button"
+          data-name="MIXUE · 蜜雪冰城"
+          data-menu="우유 소프트아이스크림"
+          data-query="蜜雪冰城 南京东路店 Shanghai China"
+          data-center="31.236898,121.485251"
+          data-zoom="16"
+          data-link="https://maps.app.goo.gl/oB2Bw74PbLp2rw94A">
+          <span class="number">01</span>
+          <span class="store-copy"><span class="name-en">MIXUE</span><span class="name-cn">蜜雪冰城</span><span class="menu">우유 소프트아이스크림</span></span>
+          <span class="arrow" aria-hidden="true">›</span>
+        </button>
+
+        <button class="store" type="button"
+          data-name="Dairy Queen · 冰雪皇后"
+          data-menu="바닐라 소프트아이스크림 · 블리자드"
+          data-query="Dairy Queen"
+          data-center="31.2354196,121.4474168"
+          data-zoom="12"
+          data-link="https://maps.app.goo.gl/ejafmwQtWp4tUShn7">
+          <span class="number">02</span>
+          <span class="store-copy"><span class="name-en">Dairy Queen</span><span class="name-cn">冰雪皇后</span><span class="menu">바닐라 소프트아이스크림 · 블리자드</span></span>
+          <span class="arrow" aria-hidden="true">›</span>
+        </button>
+
+        <button class="store" type="button"
+          data-name="BROWN SIXTY · BROWN SIXTY（银亭路店）"
+          data-menu="황두설빙 · 팥버터빵"
+          data-query="BROWN SIXTY Yinting Road Shanghai China"
+          data-center="31.1721,121.37514"
+          data-zoom="17"
+          data-link="https://maps.app.goo.gl/xtggE3czdJRzp5af9">
+          <span class="number">03</span>
+          <span class="store-copy"><span class="name-en">BROWN SIXTY</span><span class="name-cn">BROWN SIXTY（银亭路店）</span><span class="menu">황두설빙 · 팥버터빵</span></span>
+          <span class="arrow" aria-hidden="true">›</span>
+        </button>
+
+        <button class="store" type="button"
+          data-name="THE MATCHA TOKYO · 上海国金中心商场店"
+          data-menu="유기농 말차 소프트아이스크림"
+          data-query="IFC Mall Shanghai"
+          data-center="31.236862,121.501858"
+          data-zoom="17"
+          data-link="https://maps.app.goo.gl/yBtCCfSJJ6YEkEmR7">
+          <span class="number">04</span>
+          <span class="store-copy"><span class="name-en">THE MATCHA TOKYO</span><span class="name-cn">上海国金中心商场店 · LG1</span><span class="menu">유기농 말차 소프트아이스크림</span></span>
+          <span class="arrow" aria-hidden="true">›</span>
+        </button>
+
+        <button class="store" type="button"
+          data-name="90 Ye Matcha · 九十葉·抹茶专门店（上海商城店）"
+          data-menu="말차 소프트아이스크림"
+          data-query="Shanghai Centre 上海商城"
+          data-center="31.226760,121.451936"
+          data-zoom="17"
+          data-link="https://maps.app.goo.gl/ZpuER6zkRkAwnhB36">
+          <span class="number">05</span>
+          <span class="store-copy"><span class="name-en">90 Ye Matcha</span><span class="name-cn">九十葉·抹茶专门店（上海商城店）· B1</span><span class="menu">말차 소프트아이스크림</span></span>
+          <span class="arrow" aria-hidden="true">›</span>
+        </button>
+      </div>
+    </aside>
+
+    <section class="map-panel" aria-label="선택한 매장 지도">
+      <iframe id="map" title="Google 지도" loading="eager" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+      <div class="map-card">
+        <div class="map-meta">
+          <p class="map-label">Selected map</p>
+          <p id="selected-name">MIXUE · 蜜雪冰城</p>
+          <p id="selected-menu">우유 소프트아이스크림</p>
+        </div>
+        <a class="maps-link" id="maps-link" href="https://maps.app.goo.gl/oB2Bw74PbLp2rw94A" target="_blank" rel="noopener">정확한 지도 열기</a>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const map = document.querySelector('#map');
+    const stores = [...document.querySelectorAll('.store')];
+    const selectedName = document.querySelector('#selected-name');
+    const selectedMenu = document.querySelector('#selected-menu');
+    const mapsLink = document.querySelector('#maps-link');
+
+    function showStore(store) {
+      stores.forEach((item) => item.classList.toggle('active', item === store));
+      selectedName.textContent = store.dataset.name;
+      selectedMenu.textContent = store.dataset.menu;
+      mapsLink.href = store.dataset.link;
+      const center = encodeURIComponent(store.dataset.center);
+      const query = encodeURIComponent(store.dataset.query);
+      map.src = `https://maps.google.com/maps?q=${query}&ll=${center}&z=${store.dataset.zoom}&output=embed`;
+    }
+
+    stores.forEach((store) => store.addEventListener('click', () => showStore(store)));
+    showStore(stores[0]);
+  </script>
+</body>
+</html>
